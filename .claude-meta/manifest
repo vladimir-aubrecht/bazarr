@@ -1,0 +1,4 @@
+# Top-level paths synced between the working tree and the claude-meta branch.
+# One path per line, relative to the repo root, no trailing slash.
+CLAUDE.md
+.claude
