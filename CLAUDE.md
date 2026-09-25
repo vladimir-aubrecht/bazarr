@@ -31,6 +31,11 @@ Rules for every Claude session:
 (Durable project knowledge goes below — remember to run save.sh after
 editing.)
 
+- Never implement anything unless the user explicitly asks for it — no
+  code changes, commits, builds, deployments or branch operations on your
+  own initiative. Questions and problem reports get analysis and
+  proposals only; wait for an explicit go-ahead before acting. (Keeping
+  these Claude artifacts persisted via save.sh remains expected.)
 - Everything committed or pushed to this repository must be written in
   English — commit messages, source code, scripts, comments and
   documentation alike (data such as translation files are the exception).
