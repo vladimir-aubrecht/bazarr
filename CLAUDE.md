@@ -38,3 +38,10 @@ editing.)
 - Work branches must never carry the Claude artifacts as commits; the
   artifacts exist only on the `claude-meta` branch. Keep work branches
   containing exactly the changes meant for master/upstream.
+- Delivery: `.github/workflows/build-docker.yml` builds a multi-arch
+  (amd64+arm64) Docker image on every push to `master` and on `v*` tags,
+  publishing to `ghcr.io/vladimir-aubrecht/bazarr` (tags: `master`,
+  `sha-<short-sha>`, git-describe version; `latest` only on releases).
+  Docker Hub is skipped in this fork (no secrets). Manual/branch builds:
+  dispatch `build-docker.yml` (any ref) or `build-docker-manual.yml`.
+  The GHCR package is public; deploy hosts pull without login.
