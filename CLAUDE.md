@@ -38,6 +38,13 @@ editing.)
 - Work branches must never carry the Claude artifacts as commits; the
   artifacts exist only on the `claude-meta` branch. Keep work branches
   containing exactly the changes meant for master/upstream.
+- Delegate hands-on coding work (features, fixes, refactors, tests) to
+  the `coder` subagent (`.claude/agents/coder.md`) instead of doing it in
+  the main session, to conserve expensive tokens. Launch it without a
+  model override to get its default (Claude Opus 4.8); override with
+  `sonnet` for routine mechanical changes, or `fable` for the hardest
+  problems. Keep orchestration, review, decisions and user communication
+  in the main session.
 - Delivery: `.github/workflows/build-docker.yml` builds a multi-arch
   (amd64+arm64) Docker image on every push to `master` and on `v*` tags,
   publishing to `ghcr.io/vladimir-aubrecht/bazarr` (tags: `master`,
