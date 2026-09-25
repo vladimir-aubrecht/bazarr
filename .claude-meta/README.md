@@ -1,55 +1,59 @@
 # claude-meta
 
-Persistence Claude artefaktů (`CLAUDE.md`, `.claude/` – agenti, skilly,
-nastavení, paměti…) **mimo master**, aby se daly upstreamovat změny bez
-jakýchkoli Claude souborů.
+Persistence for Claude artifacts (`CLAUDE.md`, `.claude/` — agents, skills,
+settings, memories…) **outside master**, so changes can be upstreamed
+without any Claude-specific files.
 
-## Jak to funguje
+## How it works
 
-- Artefakty žijí na **orphan větvi `claude-meta`** (nemá společnou historii
-  s masterem, takže ji nejde omylem tiše mergnout – git ohlásí "unrelated
-  histories"). Nikdy se nemerguje do masteru ani do feature větví.
-- `bootstrap.sh` zkopíruje artefakty z `origin/claude-meta` do pracovní
-  kopie (jen soubory, nesahá na index) a zapíše je do `.git/info/exclude`.
-  Ten je čistě lokální (necommituje se), takže `git status` i `git add -A`
-  je na pracovních větvích trvale ignorují.
-- `save.sh` změny artefaktů commitne zpět na `claude-meta` a pushne –
-  přes dočasný worktree, bez přepínání aktuální větve.
+- The artifacts live on the **orphan branch `claude-meta`** (it shares no
+  history with master, so it cannot be merged silently by accident — git
+  reports "unrelated histories"). It is never merged into master or into
+  feature branches.
+- `bootstrap.sh` copies the artifacts from `origin/claude-meta` into the
+  working tree (files only, it never touches the index) and records them
+  in `.git/info/exclude`. That file is purely local (never committed), so
+  `git status` and `git add -A` permanently ignore the artifacts on work
+  branches.
+- `save.sh` commits artifact changes back onto `claude-meta` and pushes —
+  through a temporary worktree, without switching the current branch.
 
-Master tedy zůstává bez jediné Claude stopy (`.claude/` už mimochodem
-ignoruje `.gitignore` zděděný z upstreamu; `CLAUDE.md` a `.claude-meta/`
-kryje `.git/info/exclude`).
+Master therefore stays free of any Claude trace (`.claude/` is incidentally
+already covered by the `.gitignore` inherited from upstream; `CLAUDE.md`
+and `.claude-meta/` are covered by `.git/info/exclude`).
 
-## Bootstrap v nové session / novém klonu
+## Bootstrap in a new session / fresh clone
 
 ```sh
 git fetch --depth 1 origin +refs/heads/claude-meta:refs/remotes/origin/claude-meta
 git show origin/claude-meta:.claude-meta/bootstrap.sh | bash
 ```
 
-Pro cloudové sessions (claude.ai/code) vlož tyto dva řádky do **Setup
-scriptu** prostředí (menu prostředí v titulku session → Edit → Setup
-script), ať se artefakty obnoví automaticky při startu každé session.
+For cloud sessions (claude.ai/code), put these two lines into the
+environment's **Setup script** (environment menu in the session title bar
+→ Edit → Setup script) so the artifacts are restored automatically at the
+start of every session.
 
-## Uložení změn
+## Saving changes
 
-Po každé úpravě agentů, pamětí nebo `CLAUDE.md`:
+After any change to agents, memories or `CLAUDE.md`:
 
 ```sh
-.claude-meta/save.sh "chore: co se změnilo"
+.claude-meta/save.sh "chore: what changed"
 ```
 
-(Claude to udělá sám – má to jako instrukci v `CLAUDE.md`.)
+(Claude does this on its own — the instruction lives in `CLAUDE.md`.)
 
-## Přidání další persistované cesty
+## Adding another persisted path
 
-Přidej řádek do `.claude-meta/manifest` (cesta od kořene repa, bez
-lomítka na konci), spusť `save.sh` a příště `bootstrap.sh`.
+Add a line to `.claude-meta/manifest` (path relative to the repo root, no
+trailing slash), run `save.sh`, and next time `bootstrap.sh` picks it up.
 
-## Poznámky
+## Notes
 
-- Jinou větev lze zvolit přes `CLAUDE_META_BRANCH=<název>` u obou skriptů.
-- Když push v `save.sh` selže (někdo mezitím pushnul), spusť ho znovu –
-  fetchne si čerstvou špičku větve.
-- Smazané soubory: `bootstrap.sh` jen přidává/přepisuje; když artefakt
-  smažeš na větvi, ve starších pracovních kopiích může zůstat ležet.
+- A different branch can be selected via `CLAUDE_META_BRANCH=<name>` for
+  both scripts.
+- If the push in `save.sh` fails (someone pushed in the meantime), run it
+  again — it fetches the fresh branch tip first.
+- Deleted files: `bootstrap.sh` only adds/overwrites; when an artifact is
+  deleted on the branch, older working copies may still carry it.

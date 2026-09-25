@@ -30,3 +30,11 @@ Rules for every Claude session:
 
 (Durable project knowledge goes below — remember to run save.sh after
 editing.)
+
+- Everything committed or pushed to this repository must be written in
+  English — commit messages, source code, scripts, comments and
+  documentation alike (data such as translation files are the exception).
+  This includes the contents of the `claude-meta` branch.
+- Work branches must never carry the Claude artifacts as commits; the
+  artifacts exist only on the `claude-meta` branch. Keep work branches
+  containing exactly the changes meant for master/upstream.
