@@ -35,6 +35,7 @@ import {
   isSyncOutputSubtitle,
   sortSyncOutputSubtitles,
 } from "@/utilities/subtitles";
+import styles from "./table.module.scss";
 
 const missingText = "Missing Subtitles";
 const syncAction = 5;
@@ -543,6 +544,7 @@ const Table: FunctionComponent<Props> = ({
       {
         header: "Subtitle Path",
         accessorKey: "path",
+        meta: { className: styles.pathCell },
         cell: ({
           row: {
             original: { path },
@@ -570,6 +572,7 @@ const Table: FunctionComponent<Props> = ({
       {
         header: "Language",
         accessorKey: "name",
+        meta: { className: styles.fixedCell },
         cell: ({ row }) => {
           return (
             <SubtitleLanguageBadges
@@ -582,6 +585,7 @@ const Table: FunctionComponent<Props> = ({
       {
         id: "score",
         header: "Score",
+        meta: { className: styles.fixedCell },
         cell: ({ row: { original } }) => {
           const record = !isSubtitleTrack(original.path)
             ? historyMap.get(original.path!)
@@ -592,6 +596,7 @@ const Table: FunctionComponent<Props> = ({
       {
         id: "provider",
         header: "Provider",
+        meta: { className: styles.fixedCell },
         cell: ({ row: { original } }) => {
           const record = !isSubtitleTrack(original.path)
             ? historyMap.get(original.path!)
@@ -608,6 +613,7 @@ const Table: FunctionComponent<Props> = ({
       {
         id: "status",
         header: "Status",
+        meta: { className: styles.fixedCell },
         cell: ({ row: { original } }) => {
           const actions = !isSubtitleTrack(original.path)
             ? statusMap.get(original.path!)
@@ -630,6 +636,7 @@ const Table: FunctionComponent<Props> = ({
       },
       {
         id: "code2",
+        meta: { className: styles.fixedCell },
         cell: ({ row: { original } }) => {
           return <CodeCell item={original} />;
         },
@@ -663,6 +670,7 @@ const Table: FunctionComponent<Props> = ({
   return (
     <>
       <SimpleTable
+        className={styles.table}
         columns={columns}
         data={data}
         getRowId={(sub) => {
