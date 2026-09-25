@@ -50,6 +50,16 @@ editing.)
   `sonnet` for routine mechanical changes, or `fable` for the hardest
   problems. Keep orchestration, review, decisions and user communication
   in the main session.
+- Token routing for the other agents: `scout` (Haiku) for code
+  exploration, code questions and summaries; `runner` (Sonnet) for
+  builds, test suites and any long-output commands, so logs never enter
+  the main context; `reviewer` (Opus 4.8) to review diffs before they
+  are committed. In the main session avoid reading whole files when an
+  excerpt suffices.
+- Canonical verification: `.claude-meta/scripts/verify-frontend.sh` and
+  `.claude-meta/scripts/verify-backend.sh` (run them via the `runner`
+  agent). Image build & publish procedure lives in the `deliver` skill
+  (`.claude/skills/deliver/SKILL.md`).
 - Delivery: `.github/workflows/build-docker.yml` builds a multi-arch
   (amd64+arm64) Docker image on every push to `master` and on `v*` tags,
   publishing to `ghcr.io/vladimir-aubrecht/bazarr` (tags: `master`,
