@@ -61,7 +61,10 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  DOCKERHUB_IMAGE: lavx/bazarr
+  # Docker Hub publishing only happens where the Docker Hub secrets are
+  # configured (see the "Determine if release build" step); forks build to
+  # GHCR only. The image name can be overridden with a repository variable.
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'lavx/bazarr' }}
   UI_DIRECTORY: ./frontend
 
 jobs:
@@ -145,15 +148,26 @@ jobs:
 
       - name: Determine if release build
         id: release
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           if [[ "${{ inputs.build_type }}" == "release" ]]; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
+            IS_RELEASE=true
           else
-            echo "is_release=false" >> $GITHUB_OUTPUT
+            IS_RELEASE=false
+          fi
+          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+          # Docker Hub publishing requires the Docker Hub secrets, which
+          # only exist in the upstream repository; forks without them
+          # publish release builds to GHCR only.
+          if [[ "$IS_RELEASE" == "true" && -n "$DOCKERHUB_USERNAME" ]]; then
+            echo "push_dockerhub=true" >> $GITHUB_OUTPUT
+          else
+            echo "push_dockerhub=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Login to Docker Hub
-        if: steps.release.outputs.is_release == 'true'
+        if: steps.release.outputs.push_dockerhub == 'true'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -246,13 +260,13 @@ jobs:
           # Add latest tag if requested
           if [ "${{ inputs.push_latest }}" == "true" ]; then
             GHCR_TAGS="${GHCR_TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            if [[ "${{ inputs.build_type }}" == "release" ]]; then
+            if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
               DOCKERHUB_TAGS="${DOCKERHUB_TAGS},${{ env.DOCKERHUB_IMAGE }}:latest"
             fi
           fi
-          
+
           # Combine tags based on build type
-          if [[ "${{ inputs.build_type }}" == "release" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             ALL_TAGS="${GHCR_TAGS},${DOCKERHUB_TAGS}"
           else
             ALL_TAGS="${GHCR_TAGS}"
@@ -313,7 +327,7 @@ jobs:
           push-to-registry: true
 
       - name: Generate Docker Hub Attestation
-        if: steps.release.outputs.is_release == 'true'
+        if: steps.release.outputs.push_dockerhub == 'true'
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: docker.io/${{ env.DOCKERHUB_IMAGE }}
@@ -329,7 +343,7 @@ jobs:
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "# GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.fork_version }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ inputs.build_type }}" == "release" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "# Docker Hub" >> $GITHUB_STEP_SUMMARY
             echo "docker pull ${{ env.DOCKERHUB_IMAGE }}:${{ steps.version.outputs.fork_version }}" >> $GITHUB_STEP_SUMMARY
@@ -337,7 +351,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# By SHA (immutable)" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.version.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ inputs.build_type }}" == "release" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             echo "docker pull ${{ env.DOCKERHUB_IMAGE }}:sha-${{ steps.version.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
           fi
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -347,8 +361,8 @@ jobs:
           echo "- **Platforms:** ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Type:** ${{ inputs.build_type }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Source Branch:** ${{ inputs.branch }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ inputs.build_type }}" == "release" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             echo "- **Docker Hub:** published" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **Docker Hub:** skipped (not a release build)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Docker Hub:** skipped (not a release build or secrets not configured)" >> $GITHUB_STEP_SUMMARY
           fi

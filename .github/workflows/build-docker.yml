@@ -29,7 +29,10 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  DOCKERHUB_IMAGE: lavx/bazarr
+  # Docker Hub publishing only happens where the Docker Hub secrets are
+  # configured (see the "Determine if release build" step); forks build to
+  # GHCR only. The image name can be overridden with a repository variable.
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'lavx/bazarr' }}
   UI_DIRECTORY: ./frontend
 
 jobs:
@@ -109,15 +112,26 @@ jobs:
 
       - name: Determine if release build
         id: release
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version_tag }}" ]]; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
+            IS_RELEASE=true
           else
-            echo "is_release=false" >> $GITHUB_OUTPUT
+            IS_RELEASE=false
+          fi
+          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+          # Docker Hub publishing requires the Docker Hub secrets, which
+          # only exist in the upstream repository; forks without them
+          # publish release builds to GHCR only.
+          if [[ "$IS_RELEASE" == "true" && -n "$DOCKERHUB_USERNAME" ]]; then
+            echo "push_dockerhub=true" >> $GITHUB_OUTPUT
+          else
+            echo "push_dockerhub=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Login to Docker Hub
-        if: steps.release.outputs.is_release == 'true'
+        if: steps.release.outputs.push_dockerhub == 'true'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -161,7 +175,7 @@ jobs:
         id: images
         run: |
           IMAGES="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-          if [[ "${{ steps.release.outputs.is_release }}" == "true" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             IMAGES="${IMAGES},${{ env.DOCKERHUB_IMAGE }}"
           fi
           echo "list=${IMAGES}" >> $GITHUB_OUTPUT
@@ -220,7 +234,7 @@ jobs:
           push-to-registry: true
 
       - name: Generate Docker Hub Attestation
-        if: steps.release.outputs.is_release == 'true'
+        if: steps.release.outputs.push_dockerhub == 'true'
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: docker.io/${{ env.DOCKERHUB_IMAGE }}
@@ -235,7 +249,7 @@ jobs:
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.fork_version }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ steps.release.outputs.is_release }}" == "true" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             echo "docker pull ${{ env.DOCKERHUB_IMAGE }}:latest" >> $GITHUB_STEP_SUMMARY
             echo "docker pull ${{ env.DOCKERHUB_IMAGE }}:${{ steps.version.outputs.fork_version }}" >> $GITHUB_STEP_SUMMARY
           fi
@@ -245,10 +259,10 @@ jobs:
           echo "- **Digest:** \`${{ steps.push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Platforms:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "- **Cache Status:** GHA cache enabled" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ steps.release.outputs.is_release }}" == "true" ]]; then
+          if [[ "${{ steps.release.outputs.push_dockerhub }}" == "true" ]]; then
             echo "- **Docker Hub:** published" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **Docker Hub:** skipped (not a release build)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Docker Hub:** skipped (not a release build or secrets not configured)" >> $GITHUB_STEP_SUMMARY
           fi
 
   # Release-body management is intentionally NOT done from this workflow.
