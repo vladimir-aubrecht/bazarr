@@ -60,6 +60,30 @@ editing.)
   `.claude-meta/scripts/verify-backend.sh` (run them via the `runner`
   agent). Image build & publish procedure lives in the `deliver` skill
   (`.claude/skills/deliver/SKILL.md`).
+- Feature work in progress (user-approved plan): list filters + series
+  scores; design mockup: https://claude.ai/artifact/RzPJbPzBWvrBRfDNosRkXx
+  - Phase 1 (implemented on `feat/subtitle-status-filters`): "Subtitles:
+    Any / Complete / Missing some" filter on the Movies and Series lists,
+    client-side via the shared ItemView (movies: empty `missing_subtitles`
+    = complete; series: `episodeFileCount === 0 ||
+    episodeMissingCount === 0` = complete).
+  - Phase 2: show the match score inside subtitle badges on the series
+    detail — mirror the movie detail's historyMap pattern (episodes
+    history with include_embedded); color scale green >= 90 %, yellow
+    70-89 %, red < 70 %; tooltip with provider + matched/not_matched.
+  - Phase 3: score filter on both lists with three groups — Full
+    (100 %), Not full (< 100 %), Below threshold — the threshold is read
+    from settings (movies default 70 %, episodes 90 %); a "Lowest score"
+    column shows only while a score filter is active; needs a backend
+    aggregate (lowest current-subtitle score) on the list endpoints.
+- Feature workflow: branch each feature from FRESH `lavx/development`
+  (`git remote add lavx https://github.com/LavX/bazarr.git; git fetch
+  --depth 50 lavx development`) — never mirror development into the
+  fork. Conventional commits; PRs target `LavX/bazarr:development` and
+  the user opens them via a compare link (the GitHub App has no access
+  to LavX). Frontend tests must run under Node 24.20.0 (per .nvmrc; the
+  container's Node 22 breaks msw/undici in 6 pre-existing test files —
+  install via `npm install --prefix <scratchpad>/node24 node@24.20.0`).
 - Delivery: `.github/workflows/build-docker.yml` builds a multi-arch
   (amd64+arm64) Docker image on every push to `master` and on `v*` tags,
   publishing to `ghcr.io/vladimir-aubrecht/bazarr` (tags: `master`,
