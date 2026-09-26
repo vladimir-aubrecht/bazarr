@@ -92,6 +92,10 @@ editing.)
     backend adds an opt-in `scores` param on the movies/series list
     endpoints returning `lowest_subtitle_score` (float % or null) per
     item.
+- Reading LavX PR/CI status: the session egress proxy blocks curl to
+  api.github.com AND github.com HTML for out-of-scope repos (403), but
+  the WebFetch tool uses a different egress and works — use WebFetch on
+  the PR's /checks page.
 - Feature workflow: branch each feature from FRESH `lavx/development`
   (`git remote add lavx https://github.com/LavX/bazarr.git; git fetch
   --depth 50 lavx development`) — never mirror development into the
