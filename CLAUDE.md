@@ -31,6 +31,11 @@ Rules for every Claude session:
 (Durable project knowledge goes below — remember to run save.sh after
 editing.)
 
+- Never act blindly. Before attempting a reproduction or a fix, first
+  identify the CONCRETE failure (exact test, exact error, exact log). If
+  the evidence is out of reach, ask the user to provide it (a link, a
+  log excerpt, a screenshot) instead of guessing or brute-forcing
+  hypotheses with compute.
 - Never implement anything unless the user explicitly asks for it — no
   code changes, commits, builds, deployments or branch operations on your
   own initiative. Questions and problem reports get analysis and
