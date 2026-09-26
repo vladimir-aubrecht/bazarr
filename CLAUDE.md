@@ -77,8 +77,11 @@ editing.)
   - Phase 2 (done on `feat/episode-subtitle-scores`, reviewed "ship"):
     scores inside episode subtitle badges + tooltip; required an
     additive series_id/seriesid filter on the episodes history endpoint.
-  - Phase 3 (done on `feat/score-filter`, reviewed "ship" + fixups
-    b8861e56; STACKED on
+  - All three branches were rebased onto lavx/development d0758269
+    (which contains the merged upstream UI fix #601) and force-pushed;
+    verified green post-rebase.
+  - Phase 3 (done on `feat/score-filter`, reviewed "ship" + fixups;
+    STACKED on
     `feat/subtitle-status-filters` because both touch ItemView): score
     filter on both lists with three groups — Full (100 %), Not full
     (< 100 %), Below threshold — threshold read from settings
