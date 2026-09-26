@@ -74,11 +74,20 @@ editing.)
     detail — mirror the movie detail's historyMap pattern (episodes
     history with include_embedded); color scale green >= 90 %, yellow
     70-89 %, red < 70 %; tooltip with provider + matched/not_matched.
-  - Phase 3: score filter on both lists with three groups — Full
-    (100 %), Not full (< 100 %), Below threshold — the threshold is read
-    from settings (movies default 70 %, episodes 90 %); a "Lowest score"
-    column shows only while a score filter is active; needs a backend
-    aggregate (lowest current-subtitle score) on the list endpoints.
+  - Phase 2 (done on `feat/episode-subtitle-scores`, reviewed "ship"):
+    scores inside episode subtitle badges + tooltip; required an
+    additive series_id/seriesid filter on the episodes history endpoint.
+  - Phase 3 (in progress on `feat/score-filter`, STACKED on
+    `feat/subtitle-status-filters` because both touch ItemView): score
+    filter on both lists with three groups — Full (100 %), Not full
+    (< 100 %), Below threshold — threshold read from settings
+    (`general.minimum_score_movie`, default 70; `general.minimum_score`
+    for episodes, default 80 per config.py — NOT 90); items with no
+    scored current subtitles are excluded from all three groups; a
+    "Lowest score" column shows only while a score filter is active;
+    backend adds an opt-in `scores` param on the movies/series list
+    endpoints returning `lowest_subtitle_score` (float % or null) per
+    item.
 - Feature workflow: branch each feature from FRESH `lavx/development`
   (`git remote add lavx https://github.com/LavX/bazarr.git; git fetch
   --depth 50 lavx development`) — never mirror development into the
