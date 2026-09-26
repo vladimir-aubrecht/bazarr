@@ -64,9 +64,12 @@ editing.)
   scores; design mockup: https://claude.ai/artifact/RzPJbPzBWvrBRfDNosRkXx
   - Phase 1 (implemented on `feat/subtitle-status-filters`): "Subtitles:
     Any / Complete / Missing some" filter on the Movies and Series lists,
-    client-side via the shared ItemView (movies: empty `missing_subtitles`
-    = complete; series: `episodeFileCount === 0 ||
-    episodeMissingCount === 0` = complete).
+    client-side via the shared ItemView. User-decided semantics: items
+    WITHOUT a language profile are "untracked" — excluded from both
+    Complete and Missing some (nothing to complete); a series with no
+    episode files is untracked too. Movies with a profile: empty
+    `missing_subtitles` = complete; series with a profile and files:
+    `episodeMissingCount === 0` = complete.
   - Phase 2: show the match score inside subtitle badges on the series
     detail — mirror the movie detail's historyMap pattern (episodes
     history with include_embedded); color scale green >= 90 %, yellow
